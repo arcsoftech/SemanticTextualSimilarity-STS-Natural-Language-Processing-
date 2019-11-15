@@ -1,7 +1,9 @@
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize 
 from nltk.stem import WordNetLemmatizer
+import nltk
 import pandas as pd
+from nltk.corpus import wordnet as wn
 
 class Preprocessing:
     def __init__(self, data):
@@ -18,8 +20,11 @@ class Preprocessing:
         return s
         
     
-    def tokenize(self, sentence):
+    def tokenize(self, sentence):       
+        words = word_tokenize(sentence)
+        return words
         pass
+
     def getFeatures(self):
         pass
 
@@ -37,4 +42,26 @@ class Preprocessing:
             w = lemmatizer.lemmatize(words[i])
             words[i] = w
         return words
-                
+
+    def pos(self, tokenized_words):
+        pos_tagged = nltk.pos_tag(tokenized_words)
+        return pos_tagged
+
+    def get_synsets(self,word):
+        word_synset = wn.synsets(word)
+        return word_synset
+    
+    def get_hypernymns(self,word):
+        word_synsets = self.get_synsets(word)
+        word_hypernyms =[]
+        for synset in word_synsets:
+            word_hypernyms.append(synset.hypernyms())
+        return word_hypernyms
+    
+    def get_hyponymns(self,word):
+        word_synsets = self.get_synsets(word)
+        word_hyponymns =[]
+        for synset in word_synsets:
+            word_hyponymns.append(synset.hyponymns())
+        return word_hyponymns
+    
