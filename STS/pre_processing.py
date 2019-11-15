@@ -2,10 +2,11 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize 
 from nltk.stem import WordNetLemmatizer
 import pandas as pd
-  
+
 class Preprocessing:
     def __init__(self, data):
         self.data = data
+        self.output = {}
 
     # concat s1 and s2 together
     def getAllSentences(self):
@@ -18,7 +19,9 @@ class Preprocessing:
         
     
     def tokenize(self, sentence):
-        #TODO
+        pass
+    def getFeatures(self):
+        pass
 
     # inputs list of words and returns filtered words 
     def remove_stopwords(self,words):
