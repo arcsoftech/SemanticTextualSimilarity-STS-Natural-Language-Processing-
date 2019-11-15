@@ -19,14 +19,9 @@ class Preprocessing:
         
     
     def tokenize(self, sentence):
-<<<<<<< HEAD
-        #TODO
-        hi
-=======
         pass
     def getFeatures(self):
         pass
->>>>>>> 762b993e514895f29a339304b1379795666ab469
 
     # inputs list of words and returns filtered words 
     def remove_stopwords(self,words):
