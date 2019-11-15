@@ -5,3 +5,6 @@ if __name__ == "__main__":
     train_set = reader.get(dev=1)
     test_set = reader.get(dev=2)
     print(dev_set.head(),train_set.head())
+
+    
+  

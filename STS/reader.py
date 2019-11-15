@@ -13,3 +13,4 @@ class CorpusReader:
             return self.train
         else:
             return self.test
+
