@@ -19,6 +19,7 @@ class Preprocessing:
     
     def tokenize(self, sentence):
         #TODO
+        hi
 
     # inputs list of words and returns filtered words 
     def remove_stopwords(self,words):
@@ -35,8 +36,3 @@ class Preprocessing:
             words[i] = w
         return words
                 
-    
-
-
-
-

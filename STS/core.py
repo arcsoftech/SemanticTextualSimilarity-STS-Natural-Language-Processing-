@@ -6,5 +6,3 @@ if __name__ == "__main__":
     test_set = reader.get(dev=2)
     print(dev_set.head(),train_set.head())
 
-    
-  
