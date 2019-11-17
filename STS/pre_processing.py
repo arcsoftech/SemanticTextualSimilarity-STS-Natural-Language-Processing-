@@ -5,28 +5,27 @@ import nltk
 import pandas as pd
 from nltk.corpus import wordnet as wn
 
+
 class Preprocessing:
     def __init__(self, data):
         self.data = data
         self.output = {}
+        self.generateCorpus()
 
     # concat s1 and s2 together
     def getAllSentences(self):
-        s1 = self.data[['Sentence1']]
-        s2 = self.data[['Sentence2']]
-        s1.columns = ['Sentence']
-        s2.columns = ['Sentence']
-        s = pd.concat([s1,s2], ignore_index=True)
+        s1 = self.data['Sentence1']
+        s2 = self.data['Sentence2']
+        s = pd.concat([s1,s2], ignore_index=True).values.tolist()
         return s
         
     
     def tokenize(self, sentence):       
         words = word_tokenize(sentence)
         return words
-        pass
 
     def getFeatures(self):
-        pass
+        return self.output
 
     # inputs list of words and returns filtered words 
     def remove_stopwords(self,words):
@@ -53,15 +52,58 @@ class Preprocessing:
     
     def get_hypernymns(self,word):
         word_synsets = self.get_synsets(word)
-        word_hypernyms =[]
         for synset in word_synsets:
-            word_hypernyms.append(synset.hypernyms())
-        return word_hypernyms
+            for s in synset.hypernyms():
+                for t in s.lemmas():
+                   yield t.name()
     
     def get_hyponymns(self,word):
         word_synsets = self.get_synsets(word)
         word_hyponymns =[]
         for synset in word_synsets:
-            word_hyponymns.append(synset.hyponymns())
-        return word_hyponymns
-    
+            for s in synset.hyponymns():
+                for t in s.lemmas():
+                   yield t.name()
+
+    def get_meronyms(self,word):
+        word_synsets = self.get_synsets(word)
+        for synset in word_synsets:
+            for s in synset.part_meronyms():
+                for t in s.lemmas():
+                   yield t.name()
+            for s in synset.substance_meronyms():
+                for t in s.lemmas():
+                   yield t.name()
+
+    def get_holonyms (self,word):
+        word_synsets = self.get_synsets(word)
+        word_holonyms  =[]
+        for synset in word_synsets:
+            for s in synset.part_holonyms():
+                for t in s.lemmas():
+                   yield t.name()
+            for s in synset.substance_holonyms():
+                for t in s.lemmas():
+                   yield t.name()
+
+    def sent_vector(self,sent):
+        X = self.tokenize(sent)
+        l1 =[]
+        for w in self.vocabulary: 
+            if w in X: l1.append(1)
+            else: l1.append(0)
+        return l1  
+
+    def generateCorpus(self):
+        sentences = self.getAllSentences()
+        tokens = [self.tokenize(s) for s in sentences]
+        tokens = [x for sublist in tokens for x in sublist]
+        tokens_filtered = self.remove_stopwords(tokens)
+        lemmas = self.lemmatize(tokens)
+        self.vocabulary = list(set(tokens))
+        self.corpus= tokens
+        hypernyms = {word:list(self.get_hypernymns(word)) for word in tokens}
+        meronyms= {word:list(self.get_meronyms(word)) for word in tokens}
+        holonyms = {word:list(self.get_holonyms(word)) for word in tokens}
+        posTaggedWords= self.pos(tokens)
+        self.output.update({"tokens":tokens,"stop_word_remoevd":tokens_filtered,"lemmas":lemmas,"hypernyms":hypernyms,"meronyms":meronyms,"holonyms":holonyms,"pos":posTaggedWords})
