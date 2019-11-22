@@ -1,10 +1,11 @@
 from reader import CorpusReader
-from pre_processing import Preprocessing
+from prepprocessing import Preprocessing
 from features import cosine_simlarity
 from matplotlib import pyplot as plt
 from model import Models
 from sklearn import metrics
 import pandas as pd
+import numpy as np
 
 
 def training(devset):
@@ -42,5 +43,6 @@ if __name__ == "__main__":
     dev_set = reader.get()
     train_set = reader.get(dev=1)
     test_set = reader.get(dev=2)
-    lr = training(train_set)
-    testing(lr, dev_set)
+    print(Preprocessing(dev_set))
+    # lr = training(train_set)
+    # testing(lr, dev_set)

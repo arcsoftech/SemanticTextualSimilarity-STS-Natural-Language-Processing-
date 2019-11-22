@@ -88,12 +88,11 @@ class Preprocessing:
     def sent_vector(self, sent):
         X = self.tokenize(sent)
         L=self.lemmatize(X)
-        X=X+L
         # for x in X:
-        #     X+=self.get_hypernymns(x)
+        #     L+=list(self.get_hypernymns(x))
         l1 = []
         for w in self.vocabulary:
-            if w in X:
+            if w in L:
                 l1.append(1)
             else:
                 l1.append(0)
