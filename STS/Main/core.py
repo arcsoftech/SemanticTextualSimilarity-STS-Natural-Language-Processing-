@@ -1,5 +1,5 @@
 
-from features import cosine_simlarity
+from features import Features
 from matplotlib import pyplot as plt
 from model import Models
 from sklearn import metrics
@@ -8,16 +8,15 @@ import numpy as np
 import os
 
 def training(devset):
-    featureObject = Preprocessing(devset)
-    devset['cosineScore'] = devset.apply(lambda row: cosine_simlarity(
-        featureObject.sent_vector(row.Sentence1), featureObject.sent_vector(row.Sentence2)), axis=1)
-    devset.plot(x='cosineScore', y='Gold Tag', style='o')
-    # plt.title('cosineScore vs Gold Tag')
-    # plt.xlabel('cosineScore')
-    # plt.ylabel('Gold Tag')
-    # plt.show()
-    X = devset['cosineScore'].values.reshape(-1, 1)
-    Y = devset['Gold Tag'].values.reshape(-1, 1)
+    featureObject = Features(devset).generate()
+    print(featureObject)
+    featureObject.plot(x='cosine', y='label', style='o')
+    plt.title('cosine vs label')
+    plt.xlabel('cosine')
+    plt.ylabel('label')
+    plt.show()
+    X = featureObject['cosine'].values.reshape(-1, 1)
+    Y = featureObject['label'].values.reshape(-1, 1)
     m = Models()
     lr = m.lr()
     lr.fit(X, Y)
@@ -25,11 +24,10 @@ def training(devset):
 
 
 def testing(model, testset):
-    featureObject = Preprocessing(testset)
-    testset['cosineScore'] = testset.apply(lambda row: cosine_simlarity(
-        featureObject.sent_vector(row.Sentence1), featureObject.sent_vector(row.Sentence2)), axis=1)
-    X = testset['cosineScore'].values.reshape(-1, 1)
-    Y = testset['Gold Tag'].values.reshape(-1, 1)
+    featureObject = Features(testset).generate()
+ 
+    X = featureObject['cosine'].values.reshape(-1, 1)
+    Y = featureObject['label'].values.reshape(-1, 1)
     Y_pred = model.predict(X)
     df = pd.DataFrame({'Actual': Y.flatten(), 'Predicted': Y_pred.flatten()})
     print(df)
@@ -45,5 +43,5 @@ if __name__ == "__main__":
     train_set = pd.read_pickle("{}train".format(directory))
     test_set = pd.read_pickle("{}test".format(directory))
     print(dev_set.loc[0])
-    # lr = training(train_set)
-    # testing(lr, dev_set)
+    lr = training(train_set)
+    testing(lr, dev_set)
