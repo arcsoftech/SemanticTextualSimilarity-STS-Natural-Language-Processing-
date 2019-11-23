@@ -1,11 +1,5 @@
 from reader import CorpusReader
 from prepprocessing import Preprocessing
-from features import cosine_simlarity
-from matplotlib import pyplot as plt
-from model import Models
-from sklearn import metrics
-import pandas as pd
-import numpy as np
 
 if __name__ == "__main__":
     reader = CorpusReader("data")

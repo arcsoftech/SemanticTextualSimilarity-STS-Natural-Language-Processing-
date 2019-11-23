@@ -179,6 +179,7 @@ class Preprocessing:
         self.data["holonyms"] = self.data.apply(self.__holonyms__,axis=1)
         self.data["meronyms"] = self.data.apply(self.__meronyms__,axis=1)
         self.data['dependency_tree'] = self.data.apply(self.__generateParseTree__,axis=1)
+        self.data['vocabulary'] = self.data.apply(lambda x:list(set(x["lemmas"])),axis=1)
         return self
         
 
@@ -186,7 +187,7 @@ class Preprocessing:
         """
         Store preprocessed data for reuse
         """
-        file_path = "./PreProcessesData/{}".format(name)
+        file_path = "../PreProcessesData/{}".format(name)
         directory = os.path.dirname(file_path)
         try:
             os.stat(directory)

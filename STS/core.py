@@ -1,11 +1,11 @@
-
+from reader import CorpusReader
+from prepprocessing import Preprocessing
 from features import cosine_simlarity
 from matplotlib import pyplot as plt
 from model import Models
 from sklearn import metrics
 import pandas as pd
 import numpy as np
-import os
 
 def training(devset):
     featureObject = Preprocessing(devset)
@@ -38,12 +38,12 @@ def testing(model, testset):
 
 
 if __name__ == "__main__":
-    
-    dirname = os.path.dirname(__file__)
-    directory = os.path.join(dirname, '../PreProcessesData/')
-    dev_set = pd.read_pickle("{}dev".format(directory))
-    train_set = pd.read_pickle("{}train".format(directory))
-    test_set = pd.read_pickle("{}test".format(directory))
-    print(dev_set.loc[0])
+    reader = CorpusReader("data")
+    dev_set = Preprocessing(reader.get())
+    train_set = Preprocessing(reader.get(dev=1))
+    test_set = Preprocessing(reader.get(dev=2))
+    dev_set.transform().store("dev")
+    train_set.transform().store("train")
+    test_set.transform().store("test")
     # lr = training(train_set)
     # testing(lr, dev_set)
