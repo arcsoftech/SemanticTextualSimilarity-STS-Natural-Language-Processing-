@@ -113,65 +113,13 @@ class Preprocessing:
             return self.tok_format(node)
 
     def generateParseTree(self,row):
-        corpus = [row["Sentence1"],row["Sentence2"]]
-        for r in corpus:
-            command = r
-            en_doc = sp(u'' + command) 
-            [self.to_nltk_tree(sent.root).pretty_print() for sent in en_doc.sents]
+        corpus = row['corpus']
+        
+        for i,r in enumerate(corpus):
+            corpus[i]=[self.to_nltk_tree(sent.root) for sent in r.sents][0]
+        
+        return corpus
 
-    def generateCorpus(self):
-        self.data = self.data.reindex(self.data.columns.tolist() + ['corpus','posTaggedWords'])
-        print(self.data)
-        # for index, row in self.data.iterrows():
-        #     corpus = [row["Sentence1"],row["Sentence2"]]
-        #     print(corpus)
-            # spacified_corpus= list(self.spacifyText(corpus))
-            # print(spacified_corpus)
-            # self.data.insert(index, "corpus", spacified_corpus, True) 
-            # posTaggedWords = self.pos_spacy(spacified_corpus)
-            # df.insert(index, "posTaggedWords", posTaggedWords, True) 
-            # tokens = [token.text for token in spacified_corpus]
-            # df.insert(index, "tokens", tokens, True) 
-            # tokens_filtered = [x for x in tokens if x not in eng_stopwords]
-            # df.insert(index, "tokens_filtered", tokens_filtered, True) 
-            # posTaggedWords_filtered = [x for x in posTaggedWords if x[0] not in eng_stopwords]
-            # df.insert(index, "posTaggedWords_filtered", posTaggedWords_filtered, True) 
-
-            
-
-            # tokens = [self.tokenizer(s) for s in corpus]
-            # tokens = [x for sublist in tokens for x in sublist]
-            # tokens_filtered = self.remove_stopwords(tokens_filtered)
-            # posTaggedWords = self.pos(tokens)
-            # posTaggedWords_spacy = self.pos_spacy(corpus)
-            # lemmas = self.lemmatize(tokens,posTaggedWords)
-            # tuple_filter = lambda t, i, w: filter(lambda a: a[0] == w)
-            # newtuple = tuple_filter(posTaggedWords, 0, 'leaders')
-            # print(newtuple)
-            # print(self.data.loc[index])
-            # return
-            # self.vocabulary = list(set(lemmas))
-            # self.corpus = tokens
-            # hypernyms = {word: list(self.get_hypernymns(word)) for word in tokens}
-            # meronyms = {word: list(self.get_meronyms(word)) for word in tokens}
-            # holonyms = {word: list(self.get_holonyms(word)) for word in tokens}
-            
-            # self.output.update({"tokens": tokens, "stop_word_remoevd": tokens_filtered, "lemmas": lemmas,
-            #                     "hypernyms": hypernyms, "meronyms": meronyms, "holonyms": holonyms, "pos": posTaggedWords})
-            
-        # sentences = self.getAllSentences()
-        # tokens = [self.tokenize(s) for s in sentences]
-        # tokens = [x for sublist in tokens for x in sublist]
-        # tokens_filtered = self.remove_stopwords(tokens)
-        # lemmas = self.lemmatize(tokens)
-        # self.vocabulary = list(set(lemmas))
-        # self.corpus = tokens
-        # hypernyms = {word: list(self.get_hypernymns(word)) for word in tokens}
-        # meronyms = {word: list(self.get_meronyms(word)) for word in tokens}
-        # holonyms = {word: list(self.get_holonyms(word)) for word in tokens}
-        # posTaggedWords = self.pos(tokens)
-        # self.output.update({"tokens": tokens, "stop_word_remoevd": tokens_filtered, "lemmas": lemmas,
-        #                     "hypernyms": hypernyms, "meronyms": meronyms, "holonyms": holonyms, "pos": posTaggedWords})
 
     def tokenizer_spacy(self,row):
         corpus= row['corpus']
@@ -214,3 +162,5 @@ class Preprocessing:
         self.data["hyponyms"] = self.data.apply(self.hyponyms,axis=1)
         self.data["holonyms"] = self.data.apply(self.holonyms,axis=1)
         self.data["meronyms"] = self.data.apply(self.meronyms,axis=1)
+        self.data['dependency_tree'] = self.data.apply(self.generateParseTree,axis=1)
+        
