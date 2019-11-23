@@ -5,8 +5,12 @@ import nltk
 import pandas as pd
 from nltk.corpus import wordnet
 import spacy
+import networkx as nx
+from nltk import Tree
+
 sp = spacy.load('en_core_web_sm')
 eng_stopwords = stopwords.words('english')
+
 class Preprocessing:
     def __init__(self, data):
         self.data = data
@@ -15,9 +19,7 @@ class Preprocessing:
 
     def tokenizer(self, sentence):
         words = word_tokenize(sentence)
-        return words
-
-    
+        return words  
 
     def remove_stopwords(self, words):
         
@@ -56,7 +58,7 @@ class Preprocessing:
             yield w
 
     def get_synsets(self, word):
-            word_synset = wn.synsets(word)
+            word_synset = wordnet.synsets(word)
             return word_synset
 
     def get_hypernymns(self, word):
@@ -94,6 +96,22 @@ class Preprocessing:
             for s in synset.substance_holonyms():
                 for t in s.lemmas():
                     yield t.name()
+    
+    def tok_format(self,tok):
+        return "_".join([tok.orth_, tok.tag_, tok.dep_])
+    
+    def to_nltk_tree(self,node):
+        if node.n_lefts + node.n_rights > 0:
+            return Tree(self.tok_format(node), [self.to_nltk_tree(child) for child in node.children])
+        else:
+            return self.tok_format(node)
+
+    def generateParseTree(self,row):
+        corpus = [row["Sentence1"],row["Sentence2"]]
+        for r in corpus:
+            command = r
+            en_doc = sp(u'' + command) 
+            [self.to_nltk_tree(sent.root).pretty_print() for sent in en_doc.sents]
 
     def generateCorpus(self):
         self.data = self.data.reindex(self.data.columns.tolist() + ['corpus','posTaggedWords'])
