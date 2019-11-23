@@ -7,7 +7,6 @@ from sklearn import metrics
 import pandas as pd
 import numpy as np
 
-
 def training(devset):
     featureObject = Preprocessing(devset)
     devset['cosineScore'] = devset.apply(lambda row: cosine_simlarity(

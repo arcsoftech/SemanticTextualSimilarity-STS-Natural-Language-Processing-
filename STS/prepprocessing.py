@@ -6,7 +6,7 @@ import pandas as pd
 from nltk.corpus import wordnet
 import spacy
 sp = spacy.load('en_core_web_sm')
-
+eng_stopwords = stopwords.words('english')
 class Preprocessing:
     def __init__(self, data):
         self.data = data
@@ -20,18 +20,20 @@ class Preprocessing:
     
 
     def remove_stopwords(self, words):
-        eng_stopwords = stopwords.words('english')
+        
         filtered_words = {w for w in words if not w in eng_stopwords}
         return filtered_words
 
-    def pos(self, tokenized_words):
-        pos_tagged = nltk.pos_tag(tokenized_words)
-        return pos_tagged
-    def pos_spacy(self,sentArray):
+    # def pos(self, tokenized_words):
+    #     pos_tagged = nltk.pos_tag(tokenized_words)
+    #     return pos_tagged
+    
+    def spacifyText(self,sentArray):
         for sent in sentArray:
-            sen = sp(sent)
-            for x in sen:
-                yield (x.text,x.tag_)
+            yield sp(sent)
+    def pos_spacy(self,sentArray):
+        for x in sentArray:
+            yield (x.text,x.tag_)
     def lemmatize(self, words,posTaggedWords):
         def get_wordnet_pos(treebank_tag):
             if treebank_tag.startswith('J'):
@@ -94,19 +96,36 @@ class Preprocessing:
                     yield t.name()
 
     def generateCorpus(self):
-        for index, row in self.data.iterrows():
-            corpus = [row["Sentence1"],row["Sentence2"]]
-            tokens = [self.tokenizer(s) for s in corpus]
-            tokens = [x for sublist in tokens for x in sublist]
-            tokens_filtered = self.remove_stopwords(tokens)
-            posTaggedWords = self.pos(tokens_filtered)
-            posTaggedWords_spacy = self.pos_spacy(corpus)
+        self.data = self.data.reindex(self.data.columns.tolist() + ['corpus','posTaggedWords'])
+        print(self.data)
+        # for index, row in self.data.iterrows():
+        #     corpus = [row["Sentence1"],row["Sentence2"]]
+        #     print(corpus)
+            # spacified_corpus= list(self.spacifyText(corpus))
+            # print(spacified_corpus)
+            # self.data.insert(index, "corpus", spacified_corpus, True) 
+            # posTaggedWords = self.pos_spacy(spacified_corpus)
+            # df.insert(index, "posTaggedWords", posTaggedWords, True) 
+            # tokens = [token.text for token in spacified_corpus]
+            # df.insert(index, "tokens", tokens, True) 
+            # tokens_filtered = [x for x in tokens if x not in eng_stopwords]
+            # df.insert(index, "tokens_filtered", tokens_filtered, True) 
+            # posTaggedWords_filtered = [x for x in posTaggedWords if x[0] not in eng_stopwords]
+            # df.insert(index, "posTaggedWords_filtered", posTaggedWords_filtered, True) 
+
+            
+
+            # tokens = [self.tokenizer(s) for s in corpus]
+            # tokens = [x for sublist in tokens for x in sublist]
+            # tokens_filtered = self.remove_stopwords(tokens_filtered)
+            # posTaggedWords = self.pos(tokens)
+            # posTaggedWords_spacy = self.pos_spacy(corpus)
             # lemmas = self.lemmatize(tokens,posTaggedWords)
-            tuple_filter = lambda t, i, w: filter(lambda a: a[0] == w)
-            newtuple = tuple_filter(posTaggedWords, 0, 'leaders')
-            print(newtuple)
-            # print(posTaggedWords_spacy)
-            return
+            # tuple_filter = lambda t, i, w: filter(lambda a: a[0] == w)
+            # newtuple = tuple_filter(posTaggedWords, 0, 'leaders')
+            # print(newtuple)
+            # print(self.data.loc[index])
+            # return
             # self.vocabulary = list(set(lemmas))
             # self.corpus = tokens
             # hypernyms = {word: list(self.get_hypernymns(word)) for word in tokens}
