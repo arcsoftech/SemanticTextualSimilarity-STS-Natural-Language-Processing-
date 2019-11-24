@@ -1,5 +1,5 @@
-from reader import CorpusReader
-from prepprocessing import Preprocessing
+from lib.Preprocessing.reader import CorpusReader
+from lib.Preprocessing.prepprocessing import Preprocessing
 
 if __name__ == "__main__":
     reader = CorpusReader("data")
@@ -9,5 +9,3 @@ if __name__ == "__main__":
     dev_set.transform().store("dev")
     train_set.transform().store("train")
     test_set.transform().store("test")
-    # lr = training(train_set)
-    # testing(lr, dev_set)

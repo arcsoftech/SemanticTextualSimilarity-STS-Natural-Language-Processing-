@@ -1,7 +1,7 @@
 import os
 from matplotlib import pyplot as plt
-from features import Features
-from model import Models
+from lib.ModelTools.features import Features
+from lib.ModelTools.model import Models
 from sklearn import metrics
 import pandas as pd
 import numpy as np
