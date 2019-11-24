@@ -14,28 +14,33 @@ def training(devset):
     # plt.xlabel('cosine')
     # plt.ylabel('label')
     # plt.show()
-    X = featureObject['word_vectors'].values.reshape(-1, 1)
-    Y = featureObject['label'].values.reshape(-1, 1)
+    X = featureObject.iloc[:,:-1]  
+    Y = featureObject["label"]
+
+    print("here")
+    print(X)
+    print(Y)
     m = Models()
-    lr = m.lr()
+    lr = m.logisticRegression()
     lr.fit(X, Y)
     return lr
 
 
 def testing(model, testset):
     featureObject = Features(testset).generate()
-    X = featureObject['word_vectors'].values.reshape(-1, 1)
-    Y = featureObject['label'].values.reshape(-1, 1)
+    X = featureObject.iloc[:,:-1]  
+    Y = featureObject["label"]
     Y_pred = model.predict(X)
-    df = pd.DataFrame({'Actual': Y.flatten(), 'Predicted': Y_pred.flatten()})
+    print(Y_pred)
+    df = pd.DataFrame({'Actual': Y, 'Predicted': Y_pred})
     print(df)
-    print('Mean Squared Error:', metrics.mean_squared_error(Y, Y_pred))
+    #print('Mean Squared Error:', metrics.mean_squared_error(Y, Y_pred))
     print(lr.score(X, Y))
 
 
 if __name__ == "__main__":   
     dirname = os.path.dirname(__file__)
-    directory = os.path.join(dirname, '../PreProcessesData/')
+    directory = os.path.join(dirname, 'PreProcessesData/')
     dev_set = pd.read_pickle("{}dev".format(directory))
     train_set = pd.read_pickle("{}train".format(directory))
     test_set = pd.read_pickle("{}test".format(directory))

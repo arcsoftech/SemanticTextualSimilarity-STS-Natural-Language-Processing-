@@ -1,10 +1,6 @@
 import pandas as pd
 import spacy
-try:
-    from Preprocessing.featureGenerator import Preprocessing
-except ImportError:
-    from ..Preprocessing.featureGenerator import Preprocessing
-
+from ..Preprocessing.featureGenerator import Preprocessing
 
 nlp = spacy.load("en_core_web_lg")
 def bag_of_words(vocabulary,sentence):
@@ -36,8 +32,8 @@ class Features:
     
     def generate(self):
         self.data["cosine"] = self.df.apply(self.__cosine_simlarity__,axis=1)
-        self.data["label"] = self.df.apply(self.__get_gold_tag__,axis=1)
         self.data["word_vectors"] = self.df.apply(self.__word_to_vec__,axis=1)
+        self.data["label"] = self.df.apply(self.__get_gold_tag__,axis=1)
         return self.data
            
     def __get_gold_tag__(self,row):
@@ -45,13 +41,8 @@ class Features:
 
     def __cosine_simlarity__(self,row):
         # cosine formula
-        sentences_spacified = Preprocessing().__spacifyText__(row)
-        s1 = sentences_spacified["corpus"][0]
-        s2=  sentences_spacified["corpus"][0]
-        print(s1,s2)
-
-        v1 = bag_of_words(row['vocabulary'],sentFeatures["lemmas"])
-        v2 = bag_of_words(row['vocabulary'],sentFeatures["lemmas"])
+        v1 = bag_of_words(row['vocabulary'],row["Sentence1"])
+        v2 = bag_of_words(row['vocabulary'],row["Sentence2"])
         c = 0
         c1 = 0
         c2 = 0
@@ -63,7 +54,6 @@ class Features:
         return cosine
 
     def __word_to_vec__(self,row):
-        sentFeatures = Preprocessing(row)
         v1 = get_weighted_word_vecs(row['vocabulary'],row["Sentence1"],row["tokens"])
         v2 = get_weighted_word_vecs(row['vocabulary'],row["Sentence2"],row["tokens"])
 
