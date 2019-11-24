@@ -1,6 +1,8 @@
 import pandas as pd
-def bag_of_words(vocabulary,sentence):
+import spacy
 
+nlp = spacy.load("en_core_web_lg")
+def bag_of_words(vocabulary,sentence):
     #construct bag of words
     l1 = []
     for w in vocabulary:
@@ -10,6 +12,18 @@ def bag_of_words(vocabulary,sentence):
             l1.append(0)
     return l1
 
+def get_weighted_word_vecs(vocabulary,sentence,tokens):
+    a = 0.001
+    sum_array = [0]*300
+    for w in vocabulary:
+        if w in sentence:
+            v = nlp(w)
+            v_vec = v.vector #get the word2vec vectors here
+            count_word = tokens.count(w)
+            weight = a/(a+count_word)
+            sum_array = sum_array+ (v_vec*weight)
+    return sum_array
+
 class Features:
     def __init__(self,df):
         self.df = df
@@ -18,9 +32,9 @@ class Features:
     def generate(self):
         self.data["cosine"] = self.df.apply(self.__cosine_simlarity__,axis=1)
         self.data["label"] = self.df.apply(self.__get_gold_tag__,axis=1)
+        self.data["word_vectors"] = self.df.apply(self.__word_to_vec__,axis=1)
         return self.data
-        
-    
+           
     def __get_gold_tag__(self,row):
         return row['Gold Tag']
 
@@ -29,7 +43,27 @@ class Features:
         v1 = bag_of_words(row['vocabulary'],row["Sentence1"])
         v2 = bag_of_words(row['vocabulary'],row["Sentence2"])
         c = 0
+        c1 = 0
+        c2 = 0
         for i in range(len(v1)):
             c += v1[i]*v2[i]
-        cosine = c / float((sum(v1)*sum(v2))**0.5)
+            c1 += v1[i]**2
+            c2 += v2[i]**2
+        cosine = c / float((c1*c2)**0.5)
         return cosine
+
+    def __word_to_vec__(self,row):
+        v1 = get_weighted_word_vecs(row['vocabulary'],row["Sentence1"],row["tokens"])
+        v2 = get_weighted_word_vecs(row['vocabulary'],row["Sentence2"],row["tokens"])
+
+        c = 0
+        c1 = 0
+        c2 = 0
+        for i in range(len(v1)):
+            c += v1[i]*v2[i]
+            c1 += v1[i]*v1[i]
+            c2 += v2[i]*v2[i]
+        
+        weighted_cosine = c / float((c1*c2)**0.5)
+        return weighted_cosine
+
