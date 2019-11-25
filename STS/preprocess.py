@@ -1,5 +1,5 @@
 from lib.Preprocessing.reader import CorpusReader
-from lib.Preprocessing.prepprocessing import Preprocessing
+from lib.Preprocessing.featureGenerator import Preprocessing
 
 if __name__ == "__main__":
     reader = CorpusReader("data")

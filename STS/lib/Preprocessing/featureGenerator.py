@@ -8,14 +8,22 @@ import spacy
 import networkx as nx
 from nltk import Tree
 import os
-
+from nltk.wsd import lesk
+from collections import defaultdict
+from spacy.lang.en.stop_words import STOP_WORDS as eng_stopwords
+import string
 sp = spacy.load('en_core_web_sm')
-eng_stopwords = stopwords.words('english')
+class Lemmas:
+    def __init__(self,word,tag):
+        self.text=word
+        self.tag_=tag
 def get_synsets(word):
         word_synset = wordnet.synsets(word)
         return word_synset
 
 def get_wordnet_pos(treebank_tag):
+    if treebank_tag is None:
+        return wordnet.NOUN
     if treebank_tag.startswith('J'):
         return wordnet.ADJ
     elif treebank_tag.startswith('V'):
@@ -78,33 +86,10 @@ class Preprocessing:
         """
         Transform sentence using spacy english model
         """
-        sentArray = [row["Sentence1"],row["Sentence2"]]
+        sentArray = [row["Sentence1"].lower(),row["Sentence2"].lower()]
         for i,sent in enumerate(sentArray):
             sentArray[i] = sp(sent)
         return sentArray
-    def __pos_spacy__(self,row):
-        """
-        Generate pos tags for tokens
-        """
-        tokens = row["tokens"]
-        for i,x in enumerate(tokens):
-            tokens[i]= (x.text,x.tag_)
-        return tokens
-    def __lemmatize__(self, row):
-        """
-        Generate lemma for tokens
-        """
-        tokens_filtered = row["tokens_filtered"]
-        
-        lemmatizer = WordNetLemmatizer()
-        for i,word in enumerate(tokens_filtered):
-            tag = get_wordnet_pos(word.tag_)
-            if tag is  None:
-                w = lemmatizer.lemmatize(word.text)
-            else:
-                w = lemmatizer.lemmatize(word.text,tag)
-            tokens_filtered[i] = w
-        return tokens_filtered
     def __tokenizer_spacy__(self,row):
         """
         Generate tokens for corpus
@@ -113,58 +98,122 @@ class Preprocessing:
         tokens =[]
         for sent in corpus:
             tokens.append([token for token in sent])
-        tokens = [x for sublist in tokens for x in sublist]
+        # tokens = [x for sublist in tokens for x in sublist]
         return tokens
     def __tokenizer_spacy_filter__(self,row):
         """
         Remove stop words from tokens
         """
         tokens= row['tokens']
-        return [x for x in tokens if x.text not in eng_stopwords]
+        output=[]
+        for sent in tokens:
+            output.append([x for x in sent if x.text not in eng_stopwords or x.text not in string.punctuation])
+        return output
+    def __pos_spacy__(self,row):
+        """
+        Generate pos tags for tokens
+        """
+        tokens = row["tokens"]
+        output=[]
+        for sent in tokens:
+            output.append( [(x.text,x.tag_) for x in sent])
+        return output
     def __pos_spacy_filter__(self,row):
         """
         Generate pos tags for filtered tokens
         """
         pos_tagged= row['pos_tagged']
-        return [x for x in pos_tagged if x[0] not in eng_stopwords]
+        output = []
+        for sent in pos_tagged:
+            output.append([x for x in sent if x[0] not in eng_stopwords])
+        return output
+    def __lemmatize__(self, row):
+        """
+        Generate lemma for tokens
+        """
+        tokens_filtered = row["tokens_filtered"]
+        output = []
+        lemmatizer = WordNetLemmatizer()
+        for sent in tokens_filtered:
+            lemmas =[]
+            for word in sent:
+                tag = get_wordnet_pos(word.tag_)
+                if tag is  None:
+                    w = lemmatizer.lemmatize(word.text)
+                else:
+                    w = lemmatizer.lemmatize(word.text,tag)
+                lemmas.append(Lemmas(w,tag))
+            output.append(lemmas)
+        return output
     def __hypernyms__(self,row):
         """
         Generate hypernyms for tokens
         """
+        hypernyms = defaultdict(list)
         lemmas = row['lemmas']
-        hypernyms = {word: list(get_hypernyms(word)) for word in lemmas}
+        for sent in lemmas:
+            for word in sent:
+                hypernyms[word.text]=list(get_hypernyms(word.text))
         return hypernyms
     def __hyponyms__(self,row):
         """
         Generate hyponyms for tokens
         """
         lemmas = row['lemmas']
-        hyponyms = {word: list(get_hyponyms(word)) for word in lemmas}
+        hyponyms = defaultdict(list)
+        for sent in lemmas:
+            for word in sent:
+                hyponyms[word.text]=list(get_hyponyms(word.text))
         return hyponyms
     def __meronyms__(self,row):
         """
         Generate meronyms for tokens
         """
         lemmas = row['lemmas']
-        meronyms = {word: list(get_meronyms(word)) for word in lemmas}
+        meronyms = defaultdict(list)
+        for sent in lemmas:
+            for word in sent:
+                meronyms[word.text]=list(get_meronyms(word.text))
         return meronyms
     def __holonyms__(self,row):
         """
         Generate holonyms for tokens
         """
         lemmas = row['lemmas']
-        holonyms = {word: list(get_holonyms(word)) for word in lemmas}
+        holonyms = defaultdict(list)
+        for sent in lemmas:
+            for word in sent:
+                holonyms[word.text]=list(get_holonyms(word.text))
         return holonyms
     def __generateParseTree__(self,row):
         """
         Generate parsetree for sentences
         """
         corpus = row['corpus']
-        for i,r in enumerate(corpus):
-            corpus[i]=[to_nltk_tree(sent.root) for sent in r.sents][0]
-        return corpus
+        output  = []
+        for r in corpus:
+            output.append([to_nltk_tree(sent.root) for sent in r.sents][0])
+        return output
+    def __wordnet_lesk_wsd__(self,row):
+        """
+        Word sense disambugation 
+        """
+        lemmas = row["lemmas"]
+        nv_dict= defaultdict(lambda: defaultdict(lambda: []))
+        for i,x in enumerate(lemmas):
+            for y in x:
+                tag = get_wordnet_pos(y.tag_)
+                if(tag in ["n","v"]):
+                    nv_dict[i][tag].append((y.text,lesk(x,y.text,tag)))
+        return nv_dict
 
-  
+    def __get_vocab_from_lemmas_set(self,row):
+        lemmas = row["lemmas"]
+        output = set()
+        for sent in lemmas:
+            for word in sent:
+                output.add(word.text)
+        return output
     def transform(self):
         """
         Tranform given data to preprocessed text
@@ -180,7 +229,8 @@ class Preprocessing:
         self.data["holonyms"] = self.data.apply(self.__holonyms__,axis=1)
         self.data["meronyms"] = self.data.apply(self.__meronyms__,axis=1)
         self.data['dependency_tree'] = self.data.apply(self.__generateParseTree__,axis=1)
-        self.data['vocabulary'] = self.data.apply(lambda x:list(set(x["lemmas"])),axis=1)
+        self.data['vocabulary'] = self.data.apply(self.__get_vocab_from_lemmas_set,axis=1)
+        self.data["lesk_wsd"] = self.data.apply(self.__wordnet_lesk_wsd__,axis=1)
         return self
         
 
@@ -188,6 +238,8 @@ class Preprocessing:
         """
         Store preprocessed data for reuse
         """
+        # print(self.data.loc[0]["tokens_filtered"])
+        # print(dict(self.data.loc[0]["lesk_wsd"][0]["n"]))
         file_path = "../PreProcessesData/{}".format(name)
         directory = os.path.dirname(file_path)
         try:
