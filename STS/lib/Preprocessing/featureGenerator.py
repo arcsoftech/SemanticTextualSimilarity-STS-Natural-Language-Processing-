@@ -15,6 +15,17 @@ def get_synsets(word):
         word_synset = wordnet.synsets(word)
         return word_synset
 
+def get_wordnet_pos(treebank_tag):
+    if treebank_tag.startswith('J'):
+        return wordnet.ADJ
+    elif treebank_tag.startswith('V'):
+        return wordnet.VERB
+    elif treebank_tag.startswith('N'):
+        return wordnet.NOUN
+    elif treebank_tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return None
 def get_hypernyms(word):
     word_synsets = get_synsets(word)
     for synset in word_synsets:
@@ -84,17 +95,7 @@ class Preprocessing:
         Generate lemma for tokens
         """
         tokens_filtered = row["tokens_filtered"]
-        def get_wordnet_pos(treebank_tag):
-            if treebank_tag.startswith('J'):
-                return wordnet.ADJ
-            elif treebank_tag.startswith('V'):
-                return wordnet.VERB
-            elif treebank_tag.startswith('N'):
-                return wordnet.NOUN
-            elif treebank_tag.startswith('R'):
-                return wordnet.ADV
-            else:
-                return None
+        
         lemmatizer = WordNetLemmatizer()
         for i,word in enumerate(tokens_filtered):
             tag = get_wordnet_pos(word.tag_)
