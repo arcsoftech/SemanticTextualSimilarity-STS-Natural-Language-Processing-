@@ -4,11 +4,11 @@ import gensim.downloader as api
 word_vectors = api.load("glove-wiki-gigaword-100")  # load pre-trained word-vectors from gensim-data
 from nltk.corpus import wordnet as wn
 
+
 nlp = spacy.load("en_core_web_lg")
 def bag_of_words(vocabulary,sentence):
     #construct bag of words
     l1 = []
-    sentence= [x.text for x in sentence]
     for w in vocabulary:
         if w in sentence:
             l1.append(1)
@@ -29,6 +29,8 @@ def get_weighted_word_vecs(vocabulary,lemmas,lemmas_both):
     return sum_array
 
 def get_wup_similarity(syn1,syn2):
+    syn1= wn.synset(syn1)
+    syn2= wn.synset(syn2)
     return syn1.wup_similarity(syn2) 
 
 def get_final_similarity_score(nouns_scores_list,verbs_scores_list):
@@ -80,8 +82,8 @@ class Features:
         for word in row["lemmas"][1]:
             lemmas2.append(word.text)
 
-        v1 = bag_of_words(row['vocabulary'][0],lemmas1)
-        v2 = bag_of_words(row['vocabulary'][1],lemmas2)
+        v1 = bag_of_words(row['vocabulary'],lemmas1)
+        v2 = bag_of_words(row['vocabulary'],lemmas2)
         c = 0
         c1 = 0
         c2 = 0
@@ -104,8 +106,8 @@ class Features:
         for word in row["lemmas"][1]:
             lemmas2.append(word.text)
 
-        v1 = get_weighted_word_vecs(row['vocabulary'][0],lemmas1,lemmas1+lemmas2)
-        v2 = get_weighted_word_vecs(row['vocabulary'][1],lemmas2,lemmas1+lemmas2)
+        v1 = get_weighted_word_vecs(row['vocabulary'],lemmas1,lemmas1+lemmas2)
+        v2 = get_weighted_word_vecs(row['vocabulary'],lemmas2,lemmas1+lemmas2)
 
         c = 0
         c1 = 0
@@ -120,11 +122,11 @@ class Features:
     
     def __get_heuristic_similarity__(self,row):
         dict1 = row['lesk_wsd']
-        noun_list1 = dict1[0]['n']
-        verb_list1 = dict1[0]['v']
+        noun_list1 = dict1[0].n
+        verb_list1 = dict1[0].v
 
-        noun_list2 = dict1[1]['n']
-        verb_list2 = dict1[2]['v']
+        noun_list2 = dict1[1].n
+        verb_list2 = dict1[1].v
 
         nouns_scores_list = get_pairs_similarity(noun_list1,noun_list2)
         verbs_scores_list = get_pairs_similarity(verb_list1,verb_list2)
