@@ -17,6 +17,8 @@ class Lemmas:
     def __init__(self,word,tag):
         self.text=word
         self.tag_=tag
+    def __repr__(self):
+        return "{}|{}".format(self.text,self.tag_)
 def get_synsets(word):
         word_synset = wordnet.synsets(word)
         return word_synset
@@ -97,7 +99,7 @@ class Preprocessing:
         corpus= row['corpus']
         tokens =[]
         for sent in corpus:
-            tokens.append([token for token in sent])
+            tokens.append([Lemmas(token.text,token.tag_) for token in sent])
         # tokens = [x for sublist in tokens for x in sublist]
         return tokens
     def __tokenizer_spacy_filter__(self,row):
@@ -107,7 +109,7 @@ class Preprocessing:
         tokens= row['tokens']
         output=[]
         for sent in tokens:
-            output.append([x for x in sent if x.text not in eng_stopwords or x.text not in string.punctuation])
+            output.append([x for x in sent if x.text not in eng_stopwords and x.text not in string.punctuation])
         return output
     def __pos_spacy__(self,row):
         """
@@ -125,7 +127,7 @@ class Preprocessing:
         pos_tagged= row['pos_tagged']
         output = []
         for sent in pos_tagged:
-            output.append([x for x in sent if x[0] not in eng_stopwords])
+            output.append([x for x in sent if x[0] not in eng_stopwords and x[0] not in string.punctuation])
         return output
     def __lemmatize__(self, row):
         """
@@ -194,17 +196,20 @@ class Preprocessing:
         for r in corpus:
             output.append([to_nltk_tree(sent.root) for sent in r.sents][0])
         return output
+
     def __wordnet_lesk_wsd__(self,row):
         """
         Word sense disambugation 
         """
-        lemmas = row["lemmas"]
+        lemmas = row["tokens"]
         nv_dict= defaultdict(lambda: defaultdict(lambda: []))
+        # nv_dict = {0:{"n":[],"v":[]},1:{"n":[],"v":[]}}
         for i,x in enumerate(lemmas):
             for y in x:
                 tag = get_wordnet_pos(y.tag_)
                 if(tag in ["n","v"]):
-                    nv_dict[i][tag].append((y.text,lesk(x,y.text,tag)))
+                    wsd = lesk(x,y.text,tag)
+                    nv_dict[i][tag].append((y.text,wsd))
         return nv_dict
 
     def __get_vocab_from_lemmas_set(self,row):
@@ -238,8 +243,7 @@ class Preprocessing:
         """
         Store preprocessed data for reuse
         """
-        # print(self.data.loc[0]["tokens_filtered"])
-        # print(dict(self.data.loc[0]["lesk_wsd"][0]["n"]))
+        # print(self.data.loc[0])
         file_path = "../PreProcessesData/{}".format(name)
         directory = os.path.dirname(file_path)
         try:
