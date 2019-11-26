@@ -14,14 +14,14 @@ def bag_of_words(vocabulary,sentence):
             l1.append(0)
     return l1
 
-def get_weighted_word_vecs(vocabulary,sentence,tokens):
+def get_weighted_word_vecs(vocabulary,lemmas,lemmas_both):
     a = 0.001
     sum_array = [0]*300
     for w in vocabulary:
-        if w in sentence:
+        if w in lemmas:
             v = nlp(w)
             v_vec = v.vector #get the word2vec vectors here
-            count_word = tokens.count(w)
+            count_word = lemmas_both.count(w)
             weight = a/(a+count_word)
             sum_array = sum_array+ (v_vec*weight)
     return sum_array
@@ -50,20 +50,6 @@ def get_final_similarity_score(nouns_scores_list,verbs_scores_list):
     else:
         return 5
 
-def get_row_by_row_similarity(dict1):
-    noun_list1 = dict1[0]['n']
-    verb_list1 = dict1[0]['v']
-
-    noun_list2 = dict1[1]['n']
-    verb_list2 = dict1[2]['v']
-
-    nouns_scores_list = get_pairs_similarity(noun_list1,noun_list2)
-    verbs_scores_list = get_pairs_similarity(verb_list1,verb_list2)
-
-    final_score = get_final_similarity_score(nouns_scores_list,verbs_scores_list)
-
-    return final_score
-
 def get_pairs_similarity(list1,list2):
     sim_scores = []
     for l1 in list1:
@@ -82,6 +68,7 @@ class Features:
     def generate(self):
         self.data["cosine"] = self.df.apply(self.__cosine_simlarity__,axis=1)
         self.data["word_vectors"] = self.df.apply(self.__word_to_vec__,axis=1)
+        self.data['heuristic_similarity'] = self.df.apply(self.__get_heuristic_similarity__,axis=1)
         self.data["label"] = self.df.apply(self.__get_gold_tag__,axis=1)
         return self.data
            
@@ -90,8 +77,16 @@ class Features:
 
     def __cosine_simlarity__(self,row):
         # cosine formula
-        v1 = bag_of_words(row['vocabulary'],row["Sentence1"])
-        v2 = bag_of_words(row['vocabulary'],row["Sentence2"])
+        lemmas1 = []
+        for word in row["lemmas"][0]:
+            lemmas1.append(word.text)
+        
+        lemmas2 = []
+        for word in row["lemmas"][1]:
+            lemmas2.append(word.text)
+
+        v1 = bag_of_words(row['vocabulary'][0],lemmas1)
+        v2 = bag_of_words(row['vocabulary'][1],lemmas2)
         c = 0
         c1 = 0
         c2 = 0
@@ -103,8 +98,16 @@ class Features:
         return cosine
 
     def __word_to_vec__(self,row):
-        v1 = get_weighted_word_vecs(row['vocabulary'],row["Sentence1"],row["tokens"])
-        v2 = get_weighted_word_vecs(row['vocabulary'],row["Sentence2"],row["tokens"])
+        lemmas1 = []
+        for word in row["lemmas"][0]:
+            lemmas1.append(word.text)
+        
+        lemmas2 = []
+        for word in row["lemmas"][1]:
+            lemmas2.append(word.text)
+
+        v1 = get_weighted_word_vecs(row['vocabulary'][0],lemmas1,lemmas1+lemmas2)
+        v2 = get_weighted_word_vecs(row['vocabulary'][1],lemmas2,lemmas1+lemmas2)
 
         c = 0
         c1 = 0
@@ -117,3 +120,17 @@ class Features:
         weighted_cosine = c / float((c1*c2)**0.5)
         return weighted_cosine
     
+    def __get_heuristic_similarity__(self,row):
+        dict1 = row['lesk_wsd']
+        noun_list1 = dict1[0]['n']
+        verb_list1 = dict1[0]['v']
+
+        noun_list2 = dict1[1]['n']
+        verb_list2 = dict1[2]['v']
+
+        nouns_scores_list = get_pairs_similarity(noun_list1,noun_list2)
+        verbs_scores_list = get_pairs_similarity(verb_list1,verb_list2)
+
+        final_score = get_final_similarity_score(nouns_scores_list,verbs_scores_list)
+
+        return final_score
