@@ -8,22 +8,20 @@ import numpy as np
 
 def training(devset):
     featureObject = Features(devset).generate()
-    print(featureObject)
+    print(featureObject.head(20))
     # featureObject.plot(x='cosine', y='label', style='o')
     # plt.title('cosine vs label')
     # plt.xlabel('cosine')
     # plt.ylabel('label')
     # plt.show()
-    X = featureObject.iloc[:,:-1]  
-    Y = featureObject["label"]
-
-    print("here")
-    print(X)
-    print(Y)
-    m = Models()
-    lr = m.logisticRegression()
-    lr.fit(X, Y)
-    return lr
+    # X = featureObject.iloc[:,:-1]  
+    # Y = featureObject["label"]
+    # print(X)
+    # print(Y)
+    # m = Models()
+    # lr = m.logisticRegression()
+    # lr.fit(X, Y)
+    # return lr
 
 
 def testing(model, testset):
@@ -44,6 +42,7 @@ if __name__ == "__main__":
     dev_set = pd.read_pickle("{}dev".format(directory))
     train_set = pd.read_pickle("{}train".format(directory))
     test_set = pd.read_pickle("{}test".format(directory))
-    print(dev_set.loc[0])
-    lr = training(train_set)
-    testing(lr, dev_set)
+    # print(dev_set.loc[0])
+    # lr = training(train_set)
+    # testing(lr, dev_set)
+    training(train_set)
