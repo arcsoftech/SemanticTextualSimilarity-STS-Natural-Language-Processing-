@@ -1,6 +1,7 @@
 import pandas as pd
 import spacy
 from ..Preprocessing.featureGenerator import Preprocessing
+from nltk.corpus import wordnet as wn
 
 nlp = spacy.load("en_core_web_lg")
 def bag_of_words(vocabulary,sentence):
@@ -24,6 +25,54 @@ def get_weighted_word_vecs(vocabulary,sentence,tokens):
             weight = a/(a+count_word)
             sum_array = sum_array+ (v_vec*weight)
     return sum_array
+
+def get_wup_similarity(syn1,syn2):
+    return syn1.wup_similarity(syn2) 
+
+def get_final_similarity_score(nouns_scores_list,verbs_scores_list):
+    n=0
+    for i in nouns_scores_list:
+        n+=i
+    v=0
+    for i in verbs_scores_list:
+        v+=i
+    # find avg of scores here   
+    avg = (n+v)/(len(nouns_scores_list)+len(verbs_scores_list))
+
+    if 0<=avg<=0.2:
+        return 1
+    if 0.2<=avg<=0.4:
+        return 2
+    if 0.4<=avg<=0.6:
+        return 3
+    if 0.6<=avg<=0.8:
+        return 4
+    else:
+        return 5
+
+def get_row_by_row_similarity(dict1):
+    noun_list1 = dict1[0]['n']
+    verb_list1 = dict1[0]['v']
+
+    noun_list2 = dict1[1]['n']
+    verb_list2 = dict1[2]['v']
+
+    nouns_scores_list = get_pairs_similarity(noun_list1,noun_list2)
+    verbs_scores_list = get_pairs_similarity(verb_list1,verb_list2)
+
+    final_score = get_final_similarity_score(nouns_scores_list,verbs_scores_list)
+
+    return final_score
+
+def get_pairs_similarity(list1,list2):
+    sim_scores = []
+    for l1 in list1:
+        for l2 in list2:
+            if l1[1] is not None and l2[1] is not None:
+                sim_scores.append(get_wup_similarity(l1[1],l2[1]))
+
+    return sim_scores
+    
 
 class Features:
     def __init__(self,df):
@@ -67,4 +116,4 @@ class Features:
         
         weighted_cosine = c / float((c1*c2)**0.5)
         return weighted_cosine
-
+    
