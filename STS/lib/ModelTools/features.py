@@ -1,6 +1,7 @@
 import pandas as pd
 import spacy
-from ..Preprocessing.featureGenerator import Preprocessing
+import gensim.downloader as api
+word_vectors = api.load("glove-wiki-gigaword-100")  # load pre-trained word-vectors from gensim-data
 from nltk.corpus import wordnet as wn
 
 nlp = spacy.load("en_core_web_lg")
@@ -66,13 +67,6 @@ class Features:
         self.df = df
         self.data = pd.DataFrame()
     
-    def generate(self):
-        self.data["cosine"] = self.df.apply(self.__cosine_simlarity__,axis=1)
-        self.data["word_vectors"] = self.df.apply(self.__word_to_vec__,axis=1)
-        self.data['heuristic_similarity'] = self.df.apply(self.__get_heuristic_similarity__,axis=1)
-        self.data["label"] = self.df.apply(self.__get_gold_tag__,axis=1)
-        return self.data
-           
     def __get_gold_tag__(self,row):
         return row['Gold Tag']
 
@@ -138,3 +132,60 @@ class Features:
         final_score = get_final_similarity_score(nouns_scores_list,verbs_scores_list)
 
         return final_score
+    def __get_context_overap__(self,row):
+        lemmas = row["lemmas"]
+        hypernyms = row["hypernyms"]
+        hyponyms = row["hyponyms"]
+        holonyms = row["holonyms"]
+        meronyms = row["meronyms"]
+        sentA =set()
+        sentB= set()
+        for i in range(len(lemmas)):
+            if(i==0):
+                sentA.update(lemmas[i])
+                sentA.update([x for sublist in hypernyms[i].values() for x in sublist])
+                sentA.update([x for sublist in hyponyms[i].values() for x in sublist])
+                sentA.update([x for sublist in holonyms[i].values() for x in sublist])
+                sentA.update([x for sublist in meronyms[i].values() for x in sublist])
+            else:
+                sentB.update(lemmas[i])
+                sentB.update([x for sublist in hypernyms[i].values() for x in sublist])
+                sentB.update([x for sublist in hyponyms[i].values() for x in sublist])
+                sentB.update([x for sublist in holonyms[i].values() for x in sublist])
+                sentB.update([x for sublist in meronyms[i].values() for x in sublist])
+        intersection = sentA.intersection(sentB)
+        union = sentA.union(sentB)
+
+        return len(intersection)/len(union)
+
+    def __jaccard_similarity__(self,row):
+        tokens = row["tokens_filtered"]
+        a = set([x.text for x in tokens[0]]) 
+        b = set([x.text for x in tokens[1]])
+        intersection = a.intersection(b)
+        union = a.union(b)
+
+        return len(intersection)/len(union)
+
+    def __wmd__(self,row):
+        """
+        Word Movers disance
+        Reference:https://radimrehurek.com/gensim/models/keyedvectors.html
+        """
+        tokens = row["tokens"]
+        sentence1=[x.text for x in tokens[0]]
+        sentence2=[x.text for x in tokens[0]]
+        similarity = word_vectors.wmdistance(sentence1, sentence2)
+        return similarity
+
+    def generate(self):
+        self.data["cosine"] = self.df.apply(self.__cosine_simlarity__,axis=1)
+        self.data["word_vectors"] = self.df.apply(self.__word_to_vec__,axis=1)
+        self.data['heuristic_similarity'] = self.df.apply(self.__get_heuristic_similarity__,axis=1)
+        self.data["conceptOverlap"] = self.df.apply(self.__get_context_overap__,axis=1)
+        self.data["jaccard"] = self.df.apply(self.__jaccard_similarity__,axis=1)
+        self.data["wmd"] = self.df.apply(self.__wmd__,axis=1)
+        self.data["label"] = self.df.apply(self.__get_gold_tag__,axis=1)
+        return self.data
+           
+  
