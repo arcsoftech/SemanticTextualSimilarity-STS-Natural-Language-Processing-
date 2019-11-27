@@ -148,12 +148,12 @@ class Features:
             if(i==0):
                 sentA.update(lemmas[i])
                 sentA.update([x for sublist in hypernyms[i].values() for x in sublist])
-                sentA.update([x for sublist in hyponyms[i].values() for x in sublist])
+                # sentA.update([x for sublist in hyponyms[i].values() for x in sublist])
                 sentA.update([x for sublist in synonyms[i].values() for x in sublist])
             else:
                 sentB.update(lemmas[i])
                 sentB.update([x for sublist in hypernyms[i].values() for x in sublist])
-                sentB.update([x for sublist in hyponyms[i].values() for x in sublist])
+                # sentB.update([x for sublist in hyponyms[i].values() for x in sublist])
                 sentA.update([x for sublist in synonyms[i].values() for x in sublist])
         intersection = sentA.intersection(sentB)
         union = sentA.union(sentB)
@@ -168,6 +168,7 @@ class Features:
         union = a.union(b)
 
         return len(intersection)/len(union)
+        
 
     def __wmd__(self,row):
         """
@@ -179,7 +180,7 @@ class Features:
         sentence2=[x.text for x in tokens[1]]
         similarity = word_vectors.wmdistance(sentence1, sentence2)
         return similarity
-
+    
     def generate(self):
         self.data["cosine"] = self.df.apply(self.__cosine_simlarity__,axis=1)
         self.data["word_vectors"] = self.df.apply(self.__word_to_vec__,axis=1)
