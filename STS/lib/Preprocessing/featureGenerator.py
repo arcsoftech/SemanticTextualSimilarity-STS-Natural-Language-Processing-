@@ -62,6 +62,10 @@ def get_holonyms(synset):
         for t in s.lemmas():
             yield t.name()
 
+def get_synonyms(synset):
+    word_synset = wordnet.synset(synset)
+    for l in word_synset.lemmas():
+        yield l.name()
 
 def tok_format(tok):
     return "_".join([tok.orth_, tok.tag_, tok.dep_])
@@ -221,6 +225,19 @@ class Preprocessing:
                 holonyms[word]=list(get_holonyms(synset))
             output.append(holonyms)
         return output
+    def __synonyms__(self,row):
+        """
+        Generate synonyms after wsd
+        """
+        output=[]
+        wsd = row['lesk_wsd']
+        for sent in wsd:
+            synonyms = defaultdict(list)
+            for word,synset in sent.get_synsets():
+                synonyms[word] = list(get_synonyms(synset))
+            output.append(synonyms)
+        return output
+
     def __generateParseTree__(self,row):
         """
         Generate parsetree for sentences
@@ -272,6 +289,7 @@ class Preprocessing:
         self.data["hyponyms"] = self.data.apply(self.__hyponyms__,axis=1)
         self.data["holonyms"] = self.data.apply(self.__holonyms__,axis=1)
         self.data["meronyms"] = self.data.apply(self.__meronyms__,axis=1)
+        self.data["synonyms"] = self.data.apply(self.__synonyms__,axis=1)
         self.data['dependency_tree'] = self.data.apply(self.__generateParseTree__,axis=1)
         self.data['vocabulary'] = self.data.apply(self.__get_vocab_from_lemmas_set,axis=1)
         

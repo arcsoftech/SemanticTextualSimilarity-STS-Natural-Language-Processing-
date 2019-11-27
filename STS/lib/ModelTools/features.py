@@ -3,7 +3,7 @@ import spacy
 import gensim.downloader as api
 word_vectors = api.load("glove-wiki-gigaword-100")  # load pre-trained word-vectors from gensim-data
 from nltk.corpus import wordnet as wn
-
+import os
 
 nlp = spacy.load("en_core_web_lg")
 def bag_of_words(vocabulary,sentence):
@@ -42,17 +42,17 @@ def get_final_similarity_score(nouns_scores_list,verbs_scores_list):
         v+=i
     # find avg of scores here   
     avg = (n+v)/(len(nouns_scores_list)+len(verbs_scores_list))
-
-    if 0<=avg<=0.2:
-        return 1
-    if 0.2<=avg<=0.4:
-        return 2
-    if 0.4<=avg<=0.6:
-        return 3
-    if 0.6<=avg<=0.8:
-        return 4
-    else:
-        return 5
+    return avg
+    # if 0<=avg<=0.2:
+    #     return 1
+    # if 0.2<=avg<=0.4:
+    #     return 2
+    # if 0.4<=avg<=0.6:
+    #     return 3
+    # if 0.6<=avg<=0.8:
+    #     return 4
+    # else:
+    #     return 5
 
 def get_pairs_similarity(list1,list2):
     sim_scores = []
@@ -70,7 +70,10 @@ class Features:
         self.data = pd.DataFrame()
     
     def __get_gold_tag__(self,row):
-        return row['Gold Tag']
+        try:
+            return row['Gold Tag']
+        except:
+            return None
 
     def __cosine_simlarity__(self,row):
         # cosine formula
@@ -138,8 +141,7 @@ class Features:
         lemmas = row["lemmas"]
         hypernyms = row["hypernyms"]
         hyponyms = row["hyponyms"]
-        holonyms = row["holonyms"]
-        meronyms = row["meronyms"]
+        synonyms = row["synonyms"]
         sentA =set()
         sentB= set()
         for i in range(len(lemmas)):
@@ -147,14 +149,12 @@ class Features:
                 sentA.update(lemmas[i])
                 sentA.update([x for sublist in hypernyms[i].values() for x in sublist])
                 sentA.update([x for sublist in hyponyms[i].values() for x in sublist])
-                sentA.update([x for sublist in holonyms[i].values() for x in sublist])
-                sentA.update([x for sublist in meronyms[i].values() for x in sublist])
+                sentA.update([x for sublist in synonyms[i].values() for x in sublist])
             else:
                 sentB.update(lemmas[i])
                 sentB.update([x for sublist in hypernyms[i].values() for x in sublist])
                 sentB.update([x for sublist in hyponyms[i].values() for x in sublist])
-                sentB.update([x for sublist in holonyms[i].values() for x in sublist])
-                sentB.update([x for sublist in meronyms[i].values() for x in sublist])
+                sentA.update([x for sublist in synonyms[i].values() for x in sublist])
         intersection = sentA.intersection(sentB)
         union = sentA.union(sentB)
 
@@ -174,9 +174,9 @@ class Features:
         Word Movers disance
         Reference:https://radimrehurek.com/gensim/models/keyedvectors.html
         """
-        tokens = row["tokens"]
+        tokens = row["lemmas"]
         sentence1=[x.text for x in tokens[0]]
-        sentence2=[x.text for x in tokens[0]]
+        sentence2=[x.text for x in tokens[1]]
         similarity = word_vectors.wmdistance(sentence1, sentence2)
         return similarity
 
@@ -188,6 +188,17 @@ class Features:
         self.data["jaccard"] = self.df.apply(self.__jaccard_similarity__,axis=1)
         self.data["wmd"] = self.df.apply(self.__wmd__,axis=1)
         self.data["label"] = self.df.apply(self.__get_gold_tag__,axis=1)
-        return self.data
+        return self
+    def store(self,file_path):
+        """
+        Store feature data for reuse
+        """
+        print(self.data.loc[0])
+        directory = os.path.dirname(file_path)
+        try:
+            os.stat(directory)
+        except:
+            os.mkdir(directory)  
+        self.data.to_pickle(file_path)
            
   

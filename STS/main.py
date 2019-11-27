@@ -6,43 +6,41 @@ from sklearn import metrics
 import pandas as pd
 import numpy as np
 
-def training(devset):
-    featureObject = Features(devset).generate()
-    print(featureObject.head(20))
+def training(featureObject):
     # featureObject.plot(x='cosine', y='label', style='o')
     # plt.title('cosine vs label')
     # plt.xlabel('cosine')
     # plt.ylabel('label')
     # plt.show()
-    # X = featureObject.iloc[:,:-1]  
-    # Y = featureObject["label"]
-    # print(X)
-    # print(Y)
-    # m = Models()
-    # lr = m.logisticRegression()
-    # lr.fit(X, Y)
-    # return lr
+    X = featureObject.iloc[:,:-1]  
+    Y = featureObject["label"]
+    print(X)
+    print(Y)
+    m = Models()
+    logistic = m.logisticRegression()
+    gmm = m.gaussianMixture()
+    logistic.fit(X, Y)
+    gmm.fit(X,Y)
+    return logistic,gmm
 
 
-def testing(model, testset):
-    featureObject = Features(testset).generate()
+def testing(model, featureObject):
     X = featureObject.iloc[:,:-1]  
     Y = featureObject["label"]
     Y_pred = model.predict(X)
-    print(Y_pred)
     df = pd.DataFrame({'Actual': Y, 'Predicted': Y_pred})
-    print(df)
-    #print('Mean Squared Error:', metrics.mean_squared_error(Y, Y_pred))
-    print(lr.score(X, Y))
+    return df
 
 
 if __name__ == "__main__":   
     dirname = os.path.dirname(__file__)
-    directory = os.path.join(dirname, 'PreProcessesData/')
-    dev_set = pd.read_pickle("{}dev".format(directory))
-    train_set = pd.read_pickle("{}train".format(directory))
-    test_set = pd.read_pickle("{}test".format(directory))
-    # print(dev_set.loc[0])
-    # lr = training(train_set)
-    # testing(lr, dev_set)
-    training(train_set)
+    directory = os.path.join(dirname, 'Features/')
+    dev_feature_set = pd.read_pickle("{}dev".format(directory))
+    train_feature_set = pd.read_pickle("{}train".format(directory))
+    test_feature_set = pd.read_pickle("{}test".format(directory))
+    logistic,gmm = training(train_feature_set)
+    logistic_df=testing(logistic, dev_feature_set)
+    gmm_df=testing(gmm,dev_feature_set)
+    logistic_df.to_csv("result_logistic.csv")
+    gmm_df.to_csv("result_gmm.csv")
+   
