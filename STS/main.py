@@ -9,6 +9,8 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
 import scipy.stats as stats
+from sklearn.metrics import precision_recall_fscore_support
+
 from joblib import dump, load
 m = Models()
 
@@ -37,12 +39,14 @@ def testing(model, modelName,featureObject):
         os.stat(storepath)
     except:
         os.mkdir(storepath)
-    X = featureObject.iloc[:,:-1]  
+    X = featureObject.iloc[:,:-1] 
+    Y = featureObject["label"] 
     X = scaler.transform(X)
     Y_pred = model.predict(X)
     id=["P_{}".format(k) for k in range(len(Y_pred))]
     df = pd.DataFrame({'id': id, 'Gold Tag': Y_pred})
     df.to_csv("{}/{}.txt".format(storepath,modelName),sep="\t",index=False)
+    print("{}\n{}".format(modelName,stats.pearsonr(Y_pred,Y)))
     return Y_pred
 
 
@@ -57,24 +61,33 @@ if __name__ == "__main__":
     train_feature_set = pd.read_pickle("{}train".format(directory))
     test_feature_set = pd.read_pickle("{}test".format(directory))
     # print(train_feature_set.head(1))
-    if(op in [0,1]):
+    if(op in [0,1,2]):
         svm = training(train_feature_set,m.svm(),"svm")
         rf = training(train_feature_set,m.randomForest(),"rf")
         gb = training(train_feature_set,m.GB(),"gb")
-    if(op == 2):
-        loadpath = os.path.join(dirname, 'Models')
-        rf = load("{}/rf".format(loadpath))
-        svm = load("{}/svm".format(loadpath))
-        gb = load("{}/gb".format(loadpath))
-    if (op in [1,2]):
+    # if(op == 2):
+    #     loadpath = os.path.join(dirname, 'Models')
+    #     rf = load("{}/rf".format(loadpath))
+    #     svm = load("{}/svm".format(loadpath))
+    #     gb = load("{}/gb".format(loadpath))
+    if (op == 1):
         svm_df=testing(svm,"svm_dev",dev_feature_set)
         rf_df=testing(rf,"rf_dev",dev_feature_set)
         gb_df=testing(gb,"gb_dev",dev_feature_set)
-        # svm_df=testing(svm,"svm_test",test_feature_set)
-        # rf_df=testing(rf,"rf_test",test_feature_set)
-        # gb_df=testing(gb,"gb_test",test_feature_set)
         final = np.rint(np.mean(np.array([svm_df,rf_df,gb_df]), axis=0))
         id=["P_{}".format(k) for k in range(len(final))]
         df = pd.DataFrame({'id': id, 'Gold Tag': [int(x) for x in final]})
         df.to_csv("{}/{}.txt".format(os.path.join(dirname, 'Predictions'),"final_dev"),sep="\t",index=False)
+        print("{}\n{}".format("Final",stats.pearsonr(final,dev_feature_set["label"])))
+        p,r,f,s=precision_recall_fscore_support(dev_feature_set["label"],final, average='macro')
+        print("Precission:{}\nRecall:{}\nFScore:{}\nSupport:{}".format(p,r,f,s))
+
+    if (op == 2):
+        svm_df=testing(svm,"svm_test",test_feature_set)
+        rf_df=testing(rf,"rf_test",test_feature_set)
+        gb_df=testing(gb,"gb_test",test_feature_set)
+        final = np.rint(np.mean(np.array([svm_df,rf_df,gb_df]), axis=0))
+        id=["P_{}".format(k) for k in range(len(final))]
+        df = pd.DataFrame({'id': id, 'Gold Tag': [int(x) for x in final]})
+        df.to_csv("{}/{}.txt".format(os.path.join(dirname, 'Predictions'),"final_test"),sep="\t",index=False)
    
