@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
+import scipy.stats as stats
 
 def training(featureObject):
     featureObject.plot(x='word_vectors', y='label', style='o')
@@ -38,6 +39,7 @@ def testing(model, featureObject):
     Y_pred = model.predict(X)
     print(model.score(X,Y))
     df = pd.DataFrame({'Actual': Y, 'Predicted': Y_pred})
+    print(stats.pearsonr(Y_pred,Y))
     return df
 
 
@@ -56,7 +58,7 @@ if __name__ == "__main__":
     rf_df=testing(rf,dev_feature_set)
     gb_df=testing(gb,dev_feature_set)
 
-    logistic_df.to_csv("result_logistic.csv")
-    rf_df.to_csv("result_rf.csv")
-    svm_df.to_csv("result_rf.csv")
+    # logistic_df.to_csv("result_logistic.csv")
+    # rf_df.to_csv("result_rf.csv")
+    # svm_df.to_csv("result_rf.csv")
    

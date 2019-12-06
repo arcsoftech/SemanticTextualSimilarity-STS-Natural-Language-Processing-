@@ -106,7 +106,9 @@ class Lemmas:
         self.text=word
         self.tag_=tag
     def __repr__(self):
-        return "{}|{}".format(self.text,self.tag_)
+        return self.text
+    def __str__(self):
+        return self.text
 class Preprocessing:
     def __init__(self, data):
         self.data = data
@@ -185,7 +187,7 @@ class Preprocessing:
             hypernyms = defaultdict(list)
             for word,synset in sent.get_synsets():
                 hypernyms[word]=list(get_hypernyms(synset))
-            output.append(hypernyms)
+            output.append(dict(hypernyms))
         return output
 
     def __hyponyms__(self,row):
@@ -198,7 +200,7 @@ class Preprocessing:
             hyponyms = defaultdict(list)
             for word,synset in sent.get_synsets():
                 hyponyms[word]=list(get_hyponyms(synset))
-            output.append(hyponyms)
+            output.append(dict(hyponyms))
         return output
 
     def __meronyms__(self,row):
@@ -211,7 +213,7 @@ class Preprocessing:
             meronyms = defaultdict(list)
             for word,synset in sent.get_synsets():
                 meronyms[word]=list(get_meronyms(synset))
-            output.append(meronyms)
+            output.append(dict(meronyms))
         return output
     def __holonyms__(self,row):
         """
@@ -223,7 +225,7 @@ class Preprocessing:
             holonyms = defaultdict(list)
             for word,synset in sent.get_synsets():
                 holonyms[word]=list(get_holonyms(synset))
-            output.append(holonyms)
+            output.append(dict(holonyms))
         return output
     def __synonyms__(self,row):
         """
@@ -235,7 +237,7 @@ class Preprocessing:
             synonyms = defaultdict(list)
             for word,synset in sent.get_synsets():
                 synonyms[word] = list(get_synonyms(synset))
-            output.append(synonyms)
+            output.append(dict(synonyms))
         return output
 
     def __generateParseTree__(self,row):
@@ -245,7 +247,10 @@ class Preprocessing:
         corpus = row['corpus']
         output  = []
         for r in corpus:
-            output.append([to_nltk_tree(sent.root) for sent in r.sents][0])
+            try:
+                output.append([to_nltk_tree(sent.root) for sent in r.sents][0])
+            except:
+                pass
         return output
 
     def __wordnet_lesk_wsd__(self,row):
@@ -296,7 +301,7 @@ class Preprocessing:
         return self
         
 
-    def store(self,file_path):
+    def store(self,file_path,pickle=True):
         """
         Store preprocessed data for reuse
         """
@@ -306,4 +311,7 @@ class Preprocessing:
             os.stat(directory)
         except:
             os.mkdir(directory)  
-        self.data.to_pickle(file_path)
+        if(pickle):
+            self.data.to_pickle(file_path)
+        else:
+            self.data.to_csv(file_path)
