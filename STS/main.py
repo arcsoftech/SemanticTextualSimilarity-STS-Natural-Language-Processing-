@@ -12,14 +12,11 @@ import scipy.stats as stats
 from joblib import dump, load
 m = Models()
 
-def standardization(X):
-    scaled = scaler.fit_transform(X)
-    return scaled
 def training(featureObject,model,modelName):
     featureObject.plot(x='word_vectors', y='label', style='o')
     X = featureObject.iloc[:,:-1]  
     Y = featureObject["label"]
-    X = standardization(X)
+    X = scaler.fit_transform(X)
 
     dirname = os.path.dirname(__file__)
     storepath = os.path.join(dirname,"Models")
@@ -33,7 +30,7 @@ def training(featureObject,model,modelName):
     return model
 
 
-def testing(model, featureObject):
+def testing(model, modelName,featureObject):
     dirname = os.path.dirname(__file__)
     storepath = os.path.join(dirname,"Predictions")
     try:
@@ -41,14 +38,12 @@ def testing(model, featureObject):
     except:
         os.mkdir(storepath)
     X = featureObject.iloc[:,:-1]  
-    Y = featureObject["label"]
     X = scaler.transform(X)
     Y_pred = model.predict(X)
-    prediction = pd.Series(Y_pred)
-    print(model.score(X,Y))
-    df = pd.DataFrame({'Actual': Y, 'Predicted': Y_pred})
-    print(stats.pearsonr(Y_pred,Y))
-    return df
+    id=["P_{}".format(k) for k in range(len(Y_pred))]
+    df = pd.DataFrame({'id': id, 'Gold Tag': Y_pred})
+    df.to_csv("{}/{}.txt".format(storepath,modelName),sep="\t",index=False)
+    return Y_pred
 
 
 if __name__ == "__main__":
@@ -72,7 +67,14 @@ if __name__ == "__main__":
         svm = load("{}/svm".format(loadpath))
         gb = load("{}/gb".format(loadpath))
     if (op in [1,2]):
-        svm_df=testing(svm,dev_feature_set)
-        rf_df=testing(rf,dev_feature_set)
-        gb_df=testing(gb,dev_feature_set)
+        svm_df=testing(svm,"svm_dev",dev_feature_set)
+        rf_df=testing(rf,"rf_dev",dev_feature_set)
+        gb_df=testing(gb,"gb_dev",dev_feature_set)
+        # svm_df=testing(svm,"svm_test",test_feature_set)
+        # rf_df=testing(rf,"rf_test",test_feature_set)
+        # gb_df=testing(gb,"gb_test",test_feature_set)
+        final = np.rint(np.mean(np.array([svm_df,rf_df,gb_df]), axis=0))
+        id=["P_{}".format(k) for k in range(len(final))]
+        df = pd.DataFrame({'id': id, 'Gold Tag': [int(x) for x in final]})
+        df.to_csv("{}/{}.txt".format(os.path.join(dirname, 'Predictions'),"final_dev"),sep="\t",index=False)
    
