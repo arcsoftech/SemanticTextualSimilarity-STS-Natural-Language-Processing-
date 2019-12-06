@@ -5,6 +5,8 @@ Group Memebers:
 1. Arihant Chhajed
 2. Diksha Chhabra
 
+Download all the package from the requirement.txt
+Go to STS Directory
 ## Step #1 Preprocessing
 
 Execute preprocess.py to generate preprocessed data
@@ -24,4 +26,8 @@ argument can be as follows:-
 eg python main.py <argument>
 
 Predictions can be seen in "Predictions Folder" for all the model and average of those model.
+
+# For Feature Testing
+execute test.py
+ eg python test.py
 

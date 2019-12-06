@@ -2,3 +2,7 @@ nltk
 pandas
 networkx
 spacy
+sklearn
+scipy
+numpy
+joblib

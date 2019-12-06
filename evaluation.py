@@ -82,7 +82,7 @@ def pretty_print(report):
 def file_reader(file_path, mode = GOLD):
 	sent_to_tag = dict()
 	try:
-		reader = open(file_path, 'r')
+		reader = open(file_path, 'r',encoding="utf8")
 		data = reader.readlines()
 		if mode == GOLD:
 			data = data[1:]

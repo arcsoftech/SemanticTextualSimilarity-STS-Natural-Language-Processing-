@@ -1,6 +1,5 @@
 import os
 import sys
-from matplotlib import pyplot as plt
 from lib.ModelTools.features import Features
 from lib.ModelTools.model import Models
 from sklearn import metrics
@@ -43,7 +42,7 @@ def testing(model, modelName,featureObject):
     Y = featureObject["label"] 
     X = scaler.transform(X)
     Y_pred = model.predict(X)
-    id=["P_{}".format(k) for k in range(len(Y_pred))]
+    id=["s_{}".format(k+1) for k in range(len(Y_pred))]
     df = pd.DataFrame({'id': id, 'Gold Tag': Y_pred})
     df.to_csv("{}/{}.txt".format(storepath,modelName),sep="\t",index=False)
     print("{}\n{}".format(modelName,stats.pearsonr(Y_pred,Y)))
@@ -75,7 +74,7 @@ if __name__ == "__main__":
         rf_df=testing(rf,"rf_dev",dev_feature_set)
         gb_df=testing(gb,"gb_dev",dev_feature_set)
         final = np.rint(np.mean(np.array([svm_df,rf_df,gb_df]), axis=0))
-        id=["P_{}".format(k) for k in range(len(final))]
+        id=["s_{}".format(k+1) for k in range(len(final))]
         df = pd.DataFrame({'id': id, 'Gold Tag': [int(x) for x in final]})
         df.to_csv("{}/{}.txt".format(os.path.join(dirname, 'Predictions'),"final_dev"),sep="\t",index=False)
         print("{}\n{}".format("Final",stats.pearsonr(final,dev_feature_set["label"])))
@@ -87,7 +86,7 @@ if __name__ == "__main__":
         rf_df=testing(rf,"rf_test",test_feature_set)
         gb_df=testing(gb,"gb_test",test_feature_set)
         final = np.rint(np.mean(np.array([svm_df,rf_df,gb_df]), axis=0))
-        id=["P_{}".format(k) for k in range(len(final))]
+        id=["s_{}".format(k) for k in range(len(final))]
         df = pd.DataFrame({'id': id, 'Gold Tag': [int(x) for x in final]})
         df.to_csv("{}/{}.txt".format(os.path.join(dirname, 'Predictions'),"final_test"),sep="\t",index=False)
    
