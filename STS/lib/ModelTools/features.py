@@ -31,7 +31,17 @@ def get_weighted_word_vecs(vocabulary,lemmas,lemmas_both):
 def get_wup_similarity(syn1,syn2):
     syn1= wn.synset(syn1)
     syn2= wn.synset(syn2)
-    return syn1.wup_similarity(syn2) 
+    sim = syn1.wup_similarity(syn2) 
+    if sim is None:
+        return 0
+    return sim
+def get_path_similarity(syn1,syn2):
+    syn1= wn.synset(syn1)
+    syn2= wn.synset(syn2)
+    sim = syn1.path_similarity(syn2) 
+    if sim is None:
+        return 0
+    return sim
 
 def get_final_similarity_score(nouns_scores_list,verbs_scores_list):
     n=0
@@ -59,7 +69,7 @@ def get_pairs_similarity(list1,list2):
     for l1 in list1:
         for l2 in list2:
             if l1[1] is not None and l2[1] is not None:
-                sim_scores.append(get_wup_similarity(l1[1],l2[1]))
+                sim_scores.append(get_path_similarity(l1[1],l2[1]))
 
     return sim_scores
     
@@ -180,6 +190,23 @@ class Features:
         sentence2=[x.text for x in tokens[1]]
         similarity = word_vectors.wmdistance(sentence1, sentence2)
         return similarity
+    def __root__sim__(self,row):
+        """
+        Find subtree pattern like X ->R<- Y and generation heuristic based score 
+        where 
+        X: Subject
+        R:Relation
+        Y:Object
+        """
+        heads = row["head"]
+
+        score = 0
+        if(heads[0] is not None and heads[1] is not None):
+            score=get_wup_similarity(heads[0],heads[1])
+        
+        
+        return score
+        
     
     def generate(self):
         self.data["cosine"] = self.df.apply(self.__cosine_simlarity__,axis=1)
@@ -188,6 +215,7 @@ class Features:
         self.data["conceptOverlap"] = self.df.apply(self.__get_context_overap__,axis=1)
         self.data["jaccard"] = self.df.apply(self.__jaccard_similarity__,axis=1)
         self.data["wmd"] = self.df.apply(self.__wmd__,axis=1)
+        self.data["root_similarity"] = self.df.apply(self.__root__sim__,axis=1) 
         self.data["label"] = self.df.apply(self.__get_gold_tag__,axis=1)
         return self
     def store(self,file_path):

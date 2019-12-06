@@ -1,4 +1,5 @@
 import os
+import sys
 from matplotlib import pyplot as plt
 from lib.ModelTools.features import Features
 from lib.ModelTools.model import Models
@@ -8,57 +9,70 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
 import scipy.stats as stats
+from joblib import dump, load
+m = Models()
 
-def training(featureObject):
+def standardization(X):
+    scaled = scaler.fit_transform(X)
+    return scaled
+def training(featureObject,model,modelName):
     featureObject.plot(x='word_vectors', y='label', style='o')
-    # plt.title('cosine vs label')
-    # plt.xlabel('cosine')
-    # plt.ylabel('label')
-    # plt.show()
     X = featureObject.iloc[:,:-1]  
     Y = featureObject["label"]
-    X = scaler.fit_transform(X)
-  
-    m = Models()
-    logistic = m.logisticRegression()
-    rf = m.randomForest()
-    svm = m.svm()
-    gb = m.GB()
-    logistic.fit(X, Y)
-    rf.fit(X,Y)
-    svm.fit(X,Y)
-    gb.fit(X,Y)
-   
-    return logistic,rf,svm,gb
+    X = standardization(X)
+
+    dirname = os.path.dirname(__file__)
+    storepath = os.path.join(dirname,"Models")
+    try:
+        os.stat(storepath)
+    except:
+        os.mkdir(storepath)
+
+    model.fit(X,Y)
+    dump(model,"{}/{}".format(storepath,modelName))
+    return model
 
 
 def testing(model, featureObject):
+    dirname = os.path.dirname(__file__)
+    storepath = os.path.join(dirname,"Predictions")
+    try:
+        os.stat(storepath)
+    except:
+        os.mkdir(storepath)
     X = featureObject.iloc[:,:-1]  
     Y = featureObject["label"]
     X = scaler.transform(X)
     Y_pred = model.predict(X)
+    prediction = pd.Series(Y_pred)
     print(model.score(X,Y))
     df = pd.DataFrame({'Actual': Y, 'Predicted': Y_pred})
     print(stats.pearsonr(Y_pred,Y))
     return df
 
 
-if __name__ == "__main__":   
+if __name__ == "__main__":
+    try:
+        op = int(sys.argv[1])
+    except:
+        op=0
     dirname = os.path.dirname(__file__)
     directory = os.path.join(dirname, 'Features/')
     dev_feature_set = pd.read_pickle("{}dev".format(directory))
     train_feature_set = pd.read_pickle("{}train".format(directory))
     test_feature_set = pd.read_pickle("{}test".format(directory))
-    train_feature_set.drop(['jaccard'], axis=1, inplace=True)
-    dev_feature_set.drop(['jaccard'], axis=1, inplace=True)
-    print(train_feature_set.loc[0])
-    logistic,rf,svm,gb = training(train_feature_set)
-    logistic_df=testing(logistic, dev_feature_set)
-    svm_df=testing(svm,dev_feature_set)
-    rf_df=testing(rf,dev_feature_set)
-    gb_df=testing(gb,dev_feature_set)
-
-    # logistic_df.to_csv("result_logistic.csv")
-    # rf_df.to_csv("result_rf.csv")
-    # svm_df.to_csv("result_rf.csv")
+    # print(train_feature_set.head(1))
+    if(op in [0,1]):
+        svm = training(train_feature_set,m.svm(),"svm")
+        rf = training(train_feature_set,m.randomForest(),"rf")
+        gb = training(train_feature_set,m.GB(),"gb")
+    if(op == 2):
+        loadpath = os.path.join(dirname, 'Models')
+        rf = load("{}/rf".format(loadpath))
+        svm = load("{}/svm".format(loadpath))
+        gb = load("{}/gb".format(loadpath))
+    if (op in [1,2]):
+        svm_df=testing(svm,dev_feature_set)
+        rf_df=testing(rf,dev_feature_set)
+        gb_df=testing(gb,dev_feature_set)
    

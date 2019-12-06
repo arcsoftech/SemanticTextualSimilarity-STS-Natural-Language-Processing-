@@ -252,6 +252,39 @@ class Preprocessing:
             except:
                 pass
         return output
+    def __subtree__(self,row):
+        """
+        Find subtree pattern like X ->R<- Y and generation heuristic based score 
+        where 
+        X: Subject
+        R:Relation
+        Y:Object
+        
+        """
+        corpus = row["corpus"]
+        output = []
+        tokens = row["tokens"]
+
+        # iterate through all the tokens in the input sentence 
+        for i,sent in enumerate(corpus):
+            r=''
+            for tok in sent: 
+            # # extract subject 
+            #     if tok.dep_.find("subjpass") == True: 
+            #         y = tok.text 
+        
+            # # extract object 
+            #     if tok.dep_.endswith("obj") == True: 
+            #         x = tok.text
+            # # extract relation
+                if tok.dep_ == "ROOT":
+                    r= lesk(tokens[i],tok.text,get_wordnet_pos(tok.tag_))
+                    if r is not None:
+                        r=r.name()
+                    break
+            output.append(r)             
+        
+        return output
 
     def __wordnet_lesk_wsd__(self,row):
         """
@@ -297,6 +330,7 @@ class Preprocessing:
         self.data["synonyms"] = self.data.apply(self.__synonyms__,axis=1)
         self.data['dependency_tree'] = self.data.apply(self.__generateParseTree__,axis=1)
         self.data['vocabulary'] = self.data.apply(self.__get_vocab_from_lemmas_set,axis=1)
+        self.data['head'] = self.data.apply(self.__subtree__,axis=1)
         
         return self
         

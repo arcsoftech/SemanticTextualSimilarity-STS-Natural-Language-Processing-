@@ -8,11 +8,6 @@ from sklearn.ensemble import  GradientBoostingClassifier
 class Models:
     def __init__(self):
         pass
-    def lr(self):
-        return LinearRegression()
-    
-    def logisticRegression(self):
-        return LogisticRegression(random_state=0, solver='lbfgs',multi_class='warn' ,max_iter=500)
     def randomForest(self):
         classifier = RandomForestClassifier(n_estimators = 100, criterion = 'entropy', random_state = 42)
         return classifier
