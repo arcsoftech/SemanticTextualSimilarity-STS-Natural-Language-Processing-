@@ -9,13 +9,13 @@ class Models:
     def __init__(self):
         pass
     def randomForest(self):
-        classifier = RandomForestClassifier(n_estimators = 100, criterion = 'entropy', random_state = 42)
+        classifier = RandomForestClassifier(n_estimators = 150, criterion = 'entropy', random_state = 42)
         return classifier
     def svm(self):
         svm_model_linear = SVC(kernel = 'rbf', C = 1)
         return svm_model_linear
     def GB(self):
-        gb = GradientBoostingClassifier(n_estimators=100,criterion='friedman_mse')
+        gb = GradientBoostingClassifier(n_estimators=150,criterion='friedman_mse')
         return gb
 
     

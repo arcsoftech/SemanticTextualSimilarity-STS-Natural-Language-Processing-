@@ -17,7 +17,8 @@ def training(featureObject,model,modelName):
     featureObject.plot(x='word_vectors', y='label', style='o')
     X = featureObject.iloc[:,:-1]  
     Y = featureObject["label"]
-    X = scaler.fit_transform(X)
+    Scalermodel=scaler.fit(X)
+    X= Scalermodel.transform(X)
 
     dirname = os.path.dirname(__file__)
     storepath = os.path.join(dirname,"Models")
@@ -45,7 +46,6 @@ def testing(model, modelName,featureObject):
     id=["s_{}".format(k+1) for k in range(len(Y_pred))]
     df = pd.DataFrame({'id': id, 'Gold Tag': Y_pred})
     df.to_csv("{}/{}.txt".format(storepath,modelName),sep="\t",index=False)
-    print("{}\n{}".format(modelName,stats.pearsonr(Y_pred,Y)))
     return Y_pred
 
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         rf_df=testing(rf,"rf_test",test_feature_set)
         gb_df=testing(gb,"gb_test",test_feature_set)
         final = np.rint(np.mean(np.array([svm_df,rf_df,gb_df]), axis=0))
-        id=["s_{}".format(k) for k in range(len(final))]
+        id=["p_{}".format(k+1) for k in range(len(final))]
         df = pd.DataFrame({'id': id, 'Gold Tag': [int(x) for x in final]})
         df.to_csv("{}/{}.txt".format(os.path.join(dirname, 'Predictions'),"final_test"),sep="\t",index=False)
    

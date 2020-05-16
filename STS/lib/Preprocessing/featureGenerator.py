@@ -118,7 +118,7 @@ class Preprocessing:
         """
         Transform sentence using spacy english model
         """
-        sentArray = [row["Sentence1"].lower(),row["Sentence2"].lower()]
+        sentArray = [row["documents"].lower()]
         for i,sent in enumerate(sentArray):
             sentArray[i] = sp(sent)
         return sentArray
