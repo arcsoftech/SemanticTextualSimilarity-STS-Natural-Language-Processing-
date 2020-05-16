@@ -31,5 +31,5 @@ Predictions can be seen in "Predictions Folder" for all the model and average of
 execute test.py
  eg python test.py
 
- Contact: arihant_chhajed@yahoo.in for info
+ Contact: arihant_chhajed@yahoo.in for more info
 
