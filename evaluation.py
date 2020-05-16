@@ -107,3 +107,4 @@ if __name__ == "__main__":
 
 	correlation_score = get_correlation(gold_tags, predicted_tags)
 	print ("\nPearson correlation coefficient: ", correlation_score)
+	
