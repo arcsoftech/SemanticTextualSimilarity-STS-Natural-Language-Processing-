@@ -163,7 +163,7 @@ s_161	We often pontificate here about being the representatives of the citizens 
 s_162	Consumers will lose out, employees will lose out, Europe will lose competitive strength and growth.	Users will be the losers, with employees, and régresseront European competitiveness and growth.	5
 s_163	Unanimous decisions, and hence an inherent incapacity to act, remain largely the norm in the Council.	We maintain unanimity in Council and therefore a latent inability to act.	5
 s_164	Mr President, I rise in defence of the workers in the industry.	Mr President, I would like to take the defence of workers in this sector.	5
-s_165	Unanimous decisions, and hence an inherent incapacity to act, remain largely the norm in the Council.	We keep unanimity in the Council and therefore a latent inability to act.	4
+s_165	Unanimous  decisions, and hence an inherent incapacity to act, remain largely the norm in the Council.	We keep unanimity in the Council and therefore a latent inability to act.	4
 s_166	Mr President, the Cashman report can be summarised in four words: citizens' power over bureaucracy.	Mr President, the report Cashman can come down in some words: the power of the citizens on officialism.	5
 s_167	Mr President, I rise in defence of the workers in the industry.	Mr President, I would like to take the protection of workers in this sector.	5
 s_168	The vote will take place today at 5.30 p.m.	The vote will place to 17h30.	5
